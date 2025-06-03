@@ -1,6 +1,8 @@
-import React from 'react'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import type { Metadata } from 'next'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Bugs Bunny - Bug Tracker',
@@ -14,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50">
+      <body className={`min-h-screen bg-gray-50 ${inter.className}`}>
         {children}
       </body>
     </html>

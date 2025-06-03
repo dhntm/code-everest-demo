@@ -1,12 +1,7 @@
 import React from 'react';
-import BugCard from './BugCard';
-import type { BugCardProps } from './BugCard';
+import type { Bug } from '../types/bug';
 
-interface Bug extends BugCardProps {
-  id: number;
-}
-
-const getPriorityWeight = (priority: BugCardProps['priority']): number => {
+const getPriorityWeight = (priority: Bug['priority']): number => {
   switch (priority) {
     case 'Critical':
       return 4;
@@ -18,6 +13,32 @@ const getPriorityWeight = (priority: BugCardProps['priority']): number => {
       return 1;
     default:
       return 0;
+  }
+};
+
+const getPriorityColor = (priority: Bug['priority']): string => {
+  switch (priority) {
+    case 'Critical':
+      return 'bg-red-100 text-red-800';
+    case 'High':
+      return 'bg-orange-100 text-orange-800';
+    case 'Medium':
+      return 'bg-blue-100 text-blue-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getStatusColor = (status: Bug['status']): string => {
+  switch (status) {
+    case 'Open':
+      return 'bg-green-100 text-green-800';
+    case 'In Progress':
+      return 'bg-purple-100 text-purple-800';
+    case 'Closed':
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
   }
 };
 
@@ -50,13 +71,48 @@ const mockBugs: Bug[] = [
 
 const BugList = () => {
   return (
-    <div className="space-y-4">
-      {mockBugs.map(({ id, ...bugProps }) => (
-        <BugCard
-          key={id}
-          {...bugProps}
-        />
-      ))}
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Title & Description
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Priority
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Status
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Created On
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {mockBugs.map((bug) => (
+            <tr key={bug.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4">
+                <div className="text-sm font-medium text-gray-900">{bug.title}</div>
+                <div className="text-sm text-gray-500">{bug.description}</div>
+              </td>
+              <td className="px-6 py-4">
+                <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(bug.priority)}`}>
+                  {bug.priority}
+                </span>
+              </td>
+              <td className="px-6 py-4">
+                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(bug.status)}`}>
+                  {bug.status}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-500">
+                {bug.createdOn}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

@@ -24,17 +24,11 @@ const FilterButton = ({ label, count, active = false }: FilterButton) => (
 
 const BugFilters = () => {
   return (
-    <div className="flex justify-between items-center py-4">
-      <div className="flex gap-2">
-        <FilterButton label="Critical" count={2} />
-        <FilterButton label="High" count={2} />
-        <FilterButton label="Medium" count={2} />
-        <FilterButton label="Low" count={2} />
-      </div>
-      <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-        <span>↕️</span>
-        Sort by Criticality
-      </button>
+    <div className="flex gap-2 py-4">
+      <FilterButton label="Critical" count={2} />
+      <FilterButton label="High" count={2} />
+      <FilterButton label="Medium" count={2} />
+      <FilterButton label="Low" count={2} />
     </div>
   );
 };

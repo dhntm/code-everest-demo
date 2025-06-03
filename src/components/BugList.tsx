@@ -1,5 +1,10 @@
+'use client';
+
 import React from 'react';
-import type { Bug } from '../types/bug';
+import { useBugs } from '@/hooks/useBugs';
+import type { Database } from '@/lib/database.types';
+
+type Bug = Database['public']['Tables']['bugs']['Row'];
 
 const getPriorityWeight = (priority: Bug['priority']): number => {
   switch (priority) {
@@ -42,34 +47,25 @@ const getStatusColor = (status: Bug['status']): string => {
   }
 };
 
-const mockBugs: Bug[] = [
-  {
-    id: 1,
-    title: 'Typo on about page',
-    description: 'There is a typo in the company description on the about page.',
-    priority: 'Low' as const,
-    status: 'Closed' as const,
-    createdOn: 'Jan 10, 2025'
-  },
-  {
-    id: 2,
-    title: 'Broken links in documentation',
-    description: 'Several links in the API documentation section are broken or pointing to the wrong pages.',
-    priority: 'High' as const,
-    status: 'In Progress' as const,
-    createdOn: 'Jan 11, 2025'
-  },
-  {
-    id: 3,
-    title: 'Profile picture not uploading',
-    description: 'Users are unable to upload new profile pictures. The upload process gets stuck at 80%.',
-    priority: 'Critical' as const,
-    status: 'Open' as const,
-    createdOn: 'Jan 14, 2025'
-  }
-].sort((a, b) => getPriorityWeight(b.priority) - getPriorityWeight(a.priority));
-
 const BugList = () => {
+  const { bugs, loading, error } = useBugs();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-800 bg-red-100 rounded-lg">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
@@ -85,12 +81,12 @@ const BugList = () => {
               Status
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Created On
+              Created
             </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {mockBugs.map((bug) => (
+          {bugs.map((bug) => (
             <tr key={bug.id} className="hover:bg-gray-50">
               <td className="px-6 py-4">
                 <div className="text-sm font-medium text-gray-900">{bug.title}</div>
@@ -107,7 +103,7 @@ const BugList = () => {
                 </span>
               </td>
               <td className="px-6 py-4 text-sm text-gray-500">
-                {bug.createdOn}
+                {new Date(bug.created_at).toLocaleDateString()}
               </td>
             </tr>
           ))}

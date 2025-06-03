@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Code Everest - EuroSTAR 2025 Workshop",
-  description: "Conquering Code Everest: Let AI Be Your Sherpa - EuroSTAR 2025 Workshop Demo",
+  title: "DefectTracker - Monitor and manage project defects",
+  description: "A comprehensive defect tracking system for managing project issues and bugs",
 };
 
 export default function RootLayout({

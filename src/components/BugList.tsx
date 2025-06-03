@@ -1,10 +1,15 @@
 'use client';
 
 import React from 'react';
-import { useBugs } from '@/hooks/useBugs';
 import type { Database } from '@/lib/database.types';
 
 type Bug = Database['public']['Tables']['bugs']['Row'];
+
+interface BugListProps {
+  bugs: Bug[];
+  loading: boolean;
+  error: string | null;
+}
 
 const getPriorityWeight = (priority: Bug['priority']): number => {
   switch (priority) {
@@ -47,9 +52,7 @@ const getStatusColor = (status: Bug['status']): string => {
   }
 };
 
-const BugList = () => {
-  const { bugs, loading, error } = useBugs();
-
+const BugList = ({ bugs, loading, error }: BugListProps) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">

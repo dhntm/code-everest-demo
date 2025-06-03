@@ -10,8 +10,6 @@ import {
   Users, 
   Settings, 
   ChevronRight,
-  AlertCircle,
-  Clock,
   User,
   Calendar,
   Tag

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 import type { Database } from '@/lib/database.types';
 
 type Bug = Database['public']['Tables']['bugs']['Row'];

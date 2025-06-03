@@ -6,6 +6,21 @@ interface Bug extends BugCardProps {
   id: number;
 }
 
+const getPriorityWeight = (priority: BugCardProps['priority']): number => {
+  switch (priority) {
+    case 'Critical':
+      return 4;
+    case 'High':
+      return 3;
+    case 'Medium':
+      return 2;
+    case 'Low':
+      return 1;
+    default:
+      return 0;
+  }
+};
+
 const mockBugs: Bug[] = [
   {
     id: 1,
@@ -19,7 +34,7 @@ const mockBugs: Bug[] = [
     id: 2,
     title: 'Broken links in documentation',
     description: 'Several links in the API documentation section are broken or pointing to the wrong pages.',
-    priority: 'Low' as const,
+    priority: 'High' as const,
     status: 'In Progress' as const,
     createdOn: 'Jan 11, 2025'
   },
@@ -27,11 +42,11 @@ const mockBugs: Bug[] = [
     id: 3,
     title: 'Profile picture not uploading',
     description: 'Users are unable to upload new profile pictures. The upload process gets stuck at 80%.',
-    priority: 'Medium' as const,
+    priority: 'Critical' as const,
     status: 'Open' as const,
     createdOn: 'Jan 14, 2025'
   }
-] as const;
+].sort((a, b) => getPriorityWeight(b.priority) - getPriorityWeight(a.priority));
 
 const BugList = () => {
   return (

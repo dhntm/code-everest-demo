@@ -1,36 +1,64 @@
-import React from 'react';
+'use client';
 
-interface FilterButton {
-  label: string;
-  count: number;
-  active?: boolean;
+import React from 'react';
+import { Listbox } from '@headlessui/react';
+import { Check, ChevronDown } from 'lucide-react';
+import type { Database } from '@/lib/database.types';
+
+type BugStatus = Database['public']['Enums']['bug_status'];
+
+const ALL_STATUSES: BugStatus[] = ['Open', 'In Progress', 'Closed'];
+
+interface BugFiltersProps {
+  selectedStatuses: BugStatus[];
+  onChange: (statuses: BugStatus[]) => void;
 }
 
-const FilterButton = ({ label, count, active = false }: FilterButton) => (
-  <button
-    className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-      active ? 'bg-gray-200' : 'hover:bg-gray-100'
-    }`}
-  >
-    <span className={`w-2 h-2 rounded-full ${
-      label === 'Critical' ? 'bg-red-500' :
-      label === 'High' ? 'bg-orange-500' :
-      label === 'Medium' ? 'bg-blue-500' :
-      'bg-gray-500'
-    }`}></span>
-    {label}: {count}
-  </button>
-);
-
-const BugFilters = () => {
+export default function BugFilters({ selectedStatuses, onChange }: BugFiltersProps) {
   return (
-    <div className="flex gap-2 py-4">
-      <FilterButton label="Critical" count={2} />
-      <FilterButton label="High" count={2} />
-      <FilterButton label="Medium" count={2} />
-      <FilterButton label="Low" count={2} />
+    <div className="flex items-center space-x-4 mb-4">
+      <div className="relative w-72">
+        <Listbox value={selectedStatuses} onChange={onChange} multiple>
+          <Listbox.Button className="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <span className="block truncate">
+              {selectedStatuses.length === 0
+                ? 'Select statuses'
+                : selectedStatuses.length === ALL_STATUSES.length
+                ? 'All statuses'
+                : `${selectedStatuses.join(', ')}`}
+            </span>
+            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+              <ChevronDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
+            </span>
+          </Listbox.Button>
+          <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+            {ALL_STATUSES.map((status) => (
+              <Listbox.Option
+                key={status}
+                value={status}
+                className={({ active }) =>
+                  `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
+                    active ? 'bg-blue-100 text-blue-900' : 'text-gray-900'
+                  }`
+                }
+              >
+                {({ selected }) => (
+                  <>
+                    <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                      {status}
+                    </span>
+                    {selected ? (
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                        <Check className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                    ) : null}
+                  </>
+                )}
+              </Listbox.Option>
+            ))}
+          </Listbox.Options>
+        </Listbox>
+      </div>
     </div>
   );
-};
-
-export default BugFilters; 
+} 

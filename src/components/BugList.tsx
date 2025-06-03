@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Pencil } from 'lucide-react';
 import type { Database } from '@/lib/database.types';
 
 type Bug = Database['public']['Tables']['bugs']['Row'];
@@ -9,6 +10,7 @@ interface BugListProps {
   bugs: Bug[];
   loading: boolean;
   error: string | null;
+  onEdit: (bug: Bug) => void;
 }
 
 const getPriorityWeight = (priority: Bug['priority']): number => {
@@ -52,7 +54,7 @@ const getStatusColor = (status: Bug['status']): string => {
   }
 };
 
-const BugList = ({ bugs, loading, error }: BugListProps) => {
+const BugList = ({ bugs, loading, error, onEdit }: BugListProps) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -92,8 +94,19 @@ const BugList = ({ bugs, loading, error }: BugListProps) => {
           {bugs.map((bug) => (
             <tr key={bug.id} className="hover:bg-gray-50">
               <td className="px-6 py-4">
-                <div className="text-sm font-medium text-gray-900">{bug.title}</div>
-                <div className="text-sm text-gray-500">{bug.description}</div>
+                <div className="flex items-center">
+                  <button
+                    onClick={() => onEdit(bug)}
+                    className="p-1 rounded-full hover:bg-gray-100 mr-3"
+                    title="Edit bug"
+                  >
+                    <Pencil className="h-4 w-4 text-gray-500" />
+                  </button>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{bug.title}</div>
+                    <div className="text-sm text-gray-500">{bug.description}</div>
+                  </div>
+                </div>
               </td>
               <td className="px-6 py-4">
                 <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(bug.priority)}`}>

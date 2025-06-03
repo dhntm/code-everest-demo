@@ -1,83 +1,116 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
-import { useBugs } from '@/hooks/useBugs';
+import { useForm } from 'react-hook-form';
+import { supabase } from '@/lib/supabaseClient';
 import type { Database } from '@/lib/database.types';
 
+type Bug = Database['public']['Tables']['bugs']['Row'];
 type BugPriority = Database['public']['Enums']['bug_priority'];
 type BugStatus = Database['public']['Enums']['bug_status'];
+
+const PRIORITIES: BugPriority[] = ['Critical', 'High', 'Medium', 'Low'];
+const STATUSES: BugStatus[] = ['Open', 'In Progress', 'Closed'];
 
 interface AddBugFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editBug?: Bug;
 }
 
-const AddBugForm = ({ isOpen, onClose, onSuccess }: AddBugFormProps) => {
-  const { addBug } = useBugs();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface FormData {
+  title: string;
+  description: string;
+  priority: BugPriority;
+  status: BugStatus;
+}
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
+export default function AddBugForm({ isOpen, onClose, onSuccess, editBug }: AddBugFormProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>();
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    try {
-      await addBug({
-        title: formData.get('title') as string,
-        description: formData.get('description') as string,
-        priority: formData.get('priority') as BugPriority,
-        status: formData.get('status') as BugStatus,
+  useEffect(() => {
+    if (editBug) {
+      setValue('title', editBug.title);
+      setValue('description', editBug.description);
+      setValue('priority', editBug.priority);
+      setValue('status', editBug.status);
+    } else {
+      reset({
+        title: '',
+        description: '',
+        priority: 'Medium',
+        status: 'Open'
       });
+    }
+  }, [editBug, setValue, reset]);
 
-      form.reset();
+  const onSubmit = async (data: FormData) => {
+    try {
+      if (editBug) {
+        const { error } = await supabase
+          .from('bugs')
+          .update({
+            title: data.title,
+            description: data.description,
+            priority: data.priority,
+            status: data.status,
+          })
+          .eq('id', editBug.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('bugs')
+          .insert([{
+            title: data.title,
+            description: data.description,
+            priority: data.priority,
+            status: data.status,
+          }]);
+
+        if (error) throw error;
+      }
+
+      reset();
       onSuccess();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'An error occurred while adding the bug');
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Error saving bug:', error);
+      alert('Failed to save bug. Please try again.');
     }
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="relative z-50"
-    >
-      {/* Background overlay */}
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-
-      {/* Full-screen container */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all">
+        <Dialog.Panel className="mx-auto max-w-lg rounded bg-white p-6 w-full">
           <Dialog.Title className="text-lg font-medium leading-6 text-gray-900 mb-4">
-            Add New Bug
+            {editBug ? 'Edit Bug' : 'Add New Bug'}
           </Dialog.Title>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-4 text-red-800 bg-red-100 rounded-lg">
-                {error}
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                 Title
               </label>
               <input
                 type="text"
-                name="title"
                 id="title"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                  errors.title ? 'border-red-500' : ''
+                }`}
+                {...register('title', { required: 'Title is required' })}
               />
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+              )}
             </div>
 
             <div>
@@ -85,11 +118,16 @@ const AddBugForm = ({ isOpen, onClose, onSuccess }: AddBugFormProps) => {
                 Description
               </label>
               <textarea
-                name="description"
                 id="description"
                 rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
+                  errors.description ? 'border-red-500' : ''
+                }`}
+                {...register('description', { required: 'Description is required' })}
               />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+              )}
             </div>
 
             <div>
@@ -97,15 +135,15 @@ const AddBugForm = ({ isOpen, onClose, onSuccess }: AddBugFormProps) => {
                 Priority
               </label>
               <select
-                name="priority"
                 id="priority"
-                required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                {...register('priority')}
               >
-                <option value="Critical">Critical</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
+                {PRIORITIES.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priority}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -114,14 +152,15 @@ const AddBugForm = ({ isOpen, onClose, onSuccess }: AddBugFormProps) => {
                 Status
               </label>
               <select
-                name="status"
                 id="status"
-                required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                {...register('status')}
               >
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Closed">Closed</option>
+                {STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -129,18 +168,16 @@ const AddBugForm = ({ isOpen, onClose, onSuccess }: AddBugFormProps) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className="rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                {isSubmitting ? 'Adding...' : 'Add Bug'}
+                {isSubmitting ? 'Saving...' : editBug ? 'Save Changes' : 'Add Bug'}
               </button>
             </div>
           </form>
@@ -148,6 +185,4 @@ const AddBugForm = ({ isOpen, onClose, onSuccess }: AddBugFormProps) => {
       </div>
     </Dialog>
   );
-};
-
-export default AddBugForm; 
+} 
